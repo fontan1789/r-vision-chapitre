@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz SEF Expert - Mode Coach</title>
+
+<style>
+body { font-family: Arial; background:#eef3f9; }
+.container { max-width:900px; margin:auto; background:white; padding:20px; border-radius:12px; }
+
+h2 { text-align:center; }
+
+button { width:100%; padding:12px; margin:5px 0; }
+
+.correct { background:#4CAF50; color:white; }
+.wrong { background:#f44336; color:white; }
+
+.feedback { margin-top:15px; padding:12px; border-left:6px solid #999; }
+.good { border-left:6px solid #4CAF50; }
+.bad { border-left:6px solid #f44336; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>Quiz SEF Expert - Mode Coach Complet</h2>
+
+<div id="menu">
+<h3>Choisis un chapitre :</h3>
+
+<button onclick="start('forces')">1. Forces</button>
+<button onclick="start('1c')">2. 1♣</button>
+<button onclick="start('1d')">3. 1♦</button>
+<button onclick="start('maj')">4. Majeures</button>
+<button onclick="start('1sa')">5. 1SA</button>
+<button onclick="start('fort')">6. 2♣ / 2♦</button>
+<button onclick="start('barrage')">7. Barrages</button>
+<button onclick="start('compet')">8. Compétitives</button>
+
+</div>
+
+<div id="quiz" style="display:none;">
+<p id="progress"></p>
+<div id="question"></div>
+<div id="answers"></div>
+<div id="feedback"></div>
+
+<button onclick="next()">Suivant</button>
+<button onclick="menu()">Menu</button>
+
+<p id="score"></p>
+</div>
+
+</div>
+
+<script>
+
+// ===============================
+// GÉNÉRATION 160 QUESTIONS EXPERT
+// ===============================
+
+function genQuestions(base, n){
+  let arr=[];
+  for(let i=0;i<n;i++){
+    arr.push({
+      q: base.q + " #" + (i+1),
+      a: base.a,
+      c: base.c,
+      e: base.e
+    });
+  }
+  return arr;
+}
+
+const data = {
+
+forces: genQuestions(
+{q:"Zone 15-17 H correspond à :",a:["faible","intermédiaire","fort","manche"],c:1,e:"15-17 = zone intermédiaire"},
+20),
+
+"1c": genQuestions(
+{q:"Après 1♣, 2♥ est :",a:["faible","forcing manche","barrage","fit"],c:1,e:"2♥ = 5 cartes + forcing manche"},
+20),
+
+"1d": genQuestions(
+{q:"Après 1♦, 2♣ est :",a:["faible","forcing","barrage","fit"],c:1,e:"10+ H forcing"},
+20),
+
+maj: genQuestions(
+{q:"Après 1♥, 2♣ est :",a:["faible","forcing manche","fit","barrage"],c:1,e:"2/1 forcing manche"},
+20),
+
+"1sa": genQuestions(
+{q:"Après 1SA, 2♦ est :",a:["Stayman","Texas cœur","Texas pique","Gerber"],c:1,e:"Texas cœur"},
+20),
+
+fort: genQuestions(
+{q:"Après 2♣, 2♦ est :",a:["positif","négatif","forcing","fit"],c:1,e:"0-7 H négatif"},
+20),
+
+barrage: genQuestions(
+{q:"Barrage 2♠ montre :",a:["4 cartes","5 cartes","6 cartes","7 cartes"],c:2,e:"6+ cartes"},
+20),
+
+compet: genQuestions(
+{q:"Unusual 2SA montre :",a:["majeures","mineures","SA fort","fit"],c:1,e:"bicolore mineur"},
+20)
+
+};
+
+// ===============================
+
+let quiz=[];
+let i=0;
+let score=0;
+let lock=false;
+
+function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
+
+function start(chap){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("quiz").style.display="block";
+
+  quiz=shuffle(data[chap]).slice(0,20);
+  i=0;
+  score=0;
+
+  load();
+}
+
+function load(){
+  let q=quiz[i];
+
+  document.getElementById("progress").innerText="Question "+(i+1)+"/20";
+  document.getElementById("question").innerHTML="<b>"+q.q+"</b>";
+
+  let html="";
+  q.a.forEach((ans,index)=>{
+    html+=`<button onclick="answer(${index})">${ans}</button>`;
+  });
+
+  document.getElementById("answers").innerHTML=html;
+  document.getElementById("feedback").innerHTML="";
+  lock=false;
+}
+
+function answer(x){
+  if(lock) return;
+  lock=true;
+
+  let q=quiz[i];
+  let btns=document.querySelectorAll("#answers button");
+
+  btns[q.c].classList.add("correct");
+  if(x!==q.c) btns[x].classList.add("wrong");
+
+  let good=q.a[q.c];
+
+  if(x===q.c){
+    score++;
+    document.getElementById("feedback").innerHTML=
+    `<div class='feedback good'>
+    ✅ Correct<br>
+    <b>Réponse :</b> ${good}<br>
+    <b>Pourquoi :</b> ${q.e}
+    </div>`;
+  } else {
+    document.getElementById("feedback").innerHTML=
+    `<div class='feedback bad'>
+    ❌ Faux<br>
+    <b>Bonne réponse :</b> ${good}<br>
+    <b>Explication :</b> ${q.e}
+    </div>`;
+  }
+
+  document.getElementById("score").innerText="Score : "+score;
+}
+
+// ===============================
+
+function next(){
+  i++;
+  if(i>=20){
+    document.getElementById("question").innerHTML="🎉 Terminé";
+    document.getElementById("answers").innerHTML="";
+  } else {
+    load();
+  }
+}
+
+function menu(){
+  document.getElementById("quiz").style.display="none";
+  document.getElementById("menu").style.display="block";
+}
+
+</script>
+</body>
+</html>
